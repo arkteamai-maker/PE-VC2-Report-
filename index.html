@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PE Team Report</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- html2pdf.js for A4 Report PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    /* Prevent auto-zoom on mobile devices */
+    input, select, textarea, button {
+      font-size: 16px !important;
+    }
+
+    /* Top safe area spacing to clear Android status bar / clock */
+    header {
+      padding-top: max(28px, env(safe-area-inset-top, 32px)) !important;
+    }
+
+    #a4-report-modal {
+      padding-top: max(24px, env(safe-area-inset-top, 28px)) !important;
+    }
+    
+    .status-completed { border-left: 6px solid #16a34a; }
+    .status-in-progress { border-left: 6px solid #eab308; }
+    .status-monitoring { border-left: 6px solid #2563eb; }
+    .status-study { border-left: 6px solid #9333ea; }
+    .status-ng { border-left: 6px solid #dc2626; }
+    .status-pending { border-left: 6px solid #f97316; }
+
+    /* Validation error highlight style */
+    .input-error {
+      border-color: #ef4444 !important;
+      background-color: #fef2f2 !important;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-spinner {
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* ================= A4 PRINT SETTINGS ================= */
+    @page {
+      size: A4 portrait;
+      margin: 12mm;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        padding-bottom: 0 !important;
+      }
+
+      /* Hide App UI Chrome on Print */
+      header, nav, #submit-sticky-footer, .no-print, #tab-submit-content, #tab-setting-content, #a4-toolbar {
+        display: none !important;
+      }
+
+      /* Unhide A4 Report exclusively */
+      #a4-report-modal {
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        display: block !important;
+      }
+
+      .a4-page-sheet {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      table {
+        page-break-inside: auto;
+      }
+
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans pb-28 select-none">
+
+  <!-- Header & Navigation -->
+  <header class="bg-slate-800 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+          <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base leading-tight tracking-wide">PE TEAM REPORT</h1>
+          <p class="text-[11px] text-slate-300">Activity Reporting System</p>
+        </div>
+      </div>
+
+      <!-- Header Right Buttons -->
+      <div class="flex items-center space-x-1">
+        <button type="button" onclick="resetFormWithConfirm()" id="header-reset-btn" class="text-slate-400 hover:text-white p-2 rounded-lg" title="Clear Form">
+          <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+        </button>
+        <button type="button" onclick="toggleMenu()" class="text-white bg-slate-700 hover:bg-slate-600 p-2 rounded-lg transition-colors flex items-center gap-1">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dropdown Menu / Nav Tabs -->
+    <nav id="app-menu" class="bg-slate-900 border-t border-slate-700 hidden">
+      <div class="max-w-md mx-auto grid grid-cols-3 text-center text-xs font-bold divide-x divide-slate-800">
+        <button type="button" onclick="switchTab('submit')" id="tab-btn-submit" class="py-3 px-2 text-blue-400 bg-slate-800 flex items-center justify-center gap-1.5">
+          <i data-lucide="pen-tool" class="w-4 h-4"></i>
+          <span>REPORT</span>
+        </button>
+        <button type="button" onclick="switchTab('view')" id="tab-btn-view" class="py-3 px-2 text-slate-300 hover:text-white flex items-center justify-center gap-1.5">
+          <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+          <span>VIEW</span>
+        </button>
+        <button type="button" onclick="switchTab('setting')" id="tab-btn-setting" class="py-3 px-2 text-slate-300 hover:text-white flex items-center justify-center gap-1.5">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          <span>SETTING</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-md mx-auto w-full px-3 pt-4 flex-1">
+
+    <!-- ==================== TAB 1: SUBMIT REPORT ==================== -->
+    <div id="tab-submit-content" class="tab-page">
+      <!-- Reporter Section -->
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+          <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="user" class="w-4 h-4 text-blue-600"></i>
+            Reporter Info
+          </h2>
+          <span class="text-xs text-red-500 font-bold">* Required</span>
+        </div>
+        <div>
+          <label for="reporter-name" class="block text-xs font-semibold text-slate-600 mb-1">
+            NAME <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="reporter-name" 
+              placeholder="Enter your name (e.g. RAHMAT)" 
+              oninput="clearInputError(this)"
+              class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all uppercase placeholder:normal-case"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Activities Section -->
+      <div class="flex items-center justify-between mb-3 px-1">
+        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
+          Activities Logged (<span id="activity-count">1</span>)
+        </h2>
+        <span class="text-xs text-red-500 font-medium">* Required except Remark</span>
+      </div>
+
+      <!-- Container for dynamic activity cards -->
+      <div id="activities-container" class="space-y-4">
+        <!-- Dynamic Cards inserted here -->
+      </div>
+
+      <!-- Add Activity Button -->
+      <button 
+        type="button" 
+        onclick="addActivityCard()" 
+        class="mt-4 w-full bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-800 font-bold py-3.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-colors border border-slate-300"
+      >
+        <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600"></i>
+        <span>+ ADD ACTIVITY</span>
+      </button>
+    </div>
+
+    <!-- ==================== TAB 2: VIEW - WEEKLY SUMMARY ==================== -->
+    <div id="tab-view-content" class="tab-page hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="text-center mb-4 pb-3 border-b border-slate-100">
+          <h2 class="text-base font-black text-slate-800 tracking-wide uppercase">PE TEAM VCHIP 2</h2>
+          <p class="text-xs font-bold text-blue-600 tracking-wider uppercase">WEEKLY SUMMARY REPORT</p>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">FROM DATE <span class="text-red-500">*</span></label>
+            <input type="date" id="summary-from-date" onchange="clearInputError(this)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">TO DATE <span class="text-red-500">*</span></label>
+            <input type="date" id="summary-to-date" onchange="clearInputError(this)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <button 
+          type="button" 
+          onclick="generateSummaryReport()" 
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2 transition-colors"
+        >
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          <span>GENERATE SUMMARY</span>
+        </button>
+      </div>
+
+      <!-- Summary Results Section -->
+      <div id="summary-result-area" class="hidden space-y-4">
+        
+        <!-- Action Banner with VIEW A4 REPORT Button -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div>
+              <p class="text-xs font-bold text-slate-800 uppercase tracking-wide">A4 Official Report</p>
+              <p class="text-[10px] text-slate-500">Formatted printable factory summary</p>
+            </div>
+            <span id="summary-date-range-label" class="text-[11px] text-blue-600 font-semibold"></span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button 
+              type="button" 
+              onclick="openA4ReportModal()" 
+              class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors col-span-2"
+            >
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-400"></i>
+              <span>VIEW A4 REPORT</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="shareReportText()" 
+              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm transition-colors"
+            >
+              <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+              <span>SHARE REPORT</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="copySummaryReportText()" 
+              class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs py-2.5 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm transition-colors"
+            >
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>COPY REPORT</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Overview Metrics Grid -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Overall Status Metrics</h3>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-100 p-2 rounded-lg border border-slate-200 col-span-3">
+              <p class="text-[10px] text-slate-500 font-bold uppercase">Total Activities</p>
+              <p id="stat-total" class="text-xl font-black text-slate-800">0</p>
+            </div>
+            <div class="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+              <p class="text-[10px] text-emerald-700 font-bold uppercase">Completed</p>
+              <p id="stat-completed" class="text-base font-black text-emerald-700">0</p>
+            </div>
+            <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200">
+              <p class="text-[10px] text-yellow-700 font-bold uppercase">In Progress</p>
+              <p id="stat-in-progress" class="text-base font-black text-yellow-700">0</p>
+            </div>
+            <div class="bg-blue-50 p-2 rounded-lg border border-blue-200">
+              <p class="text-[10px] text-blue-700 font-bold uppercase">Monitoring</p>
+              <p id="stat-monitoring" class="text-base font-black text-blue-700">0</p>
+            </div>
+            <div class="bg-purple-50 p-2 rounded-lg border border-purple-200">
+              <p class="text-[10px] text-purple-700 font-bold uppercase">Study</p>
+              <p id="stat-study" class="text-base font-black text-purple-700">0</p>
+            </div>
+            <div class="bg-red-50 p-2 rounded-lg border border-red-200">
+              <p class="text-[10px] text-red-700 font-bold uppercase">NG</p>
+              <p id="stat-ng" class="text-base font-black text-red-700">0</p>
+            </div>
+            <div class="bg-orange-50 p-2 rounded-lg border border-orange-200">
+              <p class="text-[10px] text-orange-700 font-bold uppercase">Pending</p>
+              <p id="stat-pending" class="text-base font-black text-orange-700">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grouped Activity Tables -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">ACTIVITY LIST TABLES</h3>
+
+          <div id="summary-grouped-container" class="space-y-4">
+            <!-- Activity tables injected here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: SETTING ==================== -->
+    <div id="tab-setting-content" class="tab-page hidden space-y-4">
+      
+      <!-- Password Lock Screen -->
+      <div id="setting-auth-card" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 text-center">
+        <div class="w-12 h-12 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="lock" class="w-6 h-6"></i>
+        </div>
+        <h2 class="text-base font-bold text-slate-800 mb-1">SETTING</h2>
+        <p class="text-xs text-slate-500 mb-4">Enter password to access administrator features</p>
+        
+        <div class="space-y-3 max-w-xs mx-auto">
+          <input 
+            type="password" 
+            id="setting-password-input" 
+            placeholder="Enter Password" 
+            class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-3 text-center text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button 
+            type="button" 
+            onclick="authenticateSetting()" 
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition-colors"
+          >
+            LOGIN
+          </button>
+        </div>
+      </div>
+
+      <!-- Protected Setting Main Content -->
+      <div id="setting-main-content" class="hidden space-y-4">
+        <!-- Google Sheet Access -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+            GOOGLE SHEET
+          </h2>
+          <p class="text-xs text-slate-600 mb-3">Direct link to the primary Google Sheet database.</p>
+          <a 
+            href="https://docs.google.com/spreadsheets/d/1F5zMxyOs8SO9HcAtyRAEDmLUOmGMfINFGnTHVIsClps/edit?usp=drivesdk" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition-colors block text-center text-sm"
+          >
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+            <span>OPEN GOOGLE SHEET</span>
+          </a>
+        </div>
+
+        <!-- Filter / Check Report Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+            <i data-lucide="search" class="w-4 h-4 text-blue-600"></i>
+            CHECK REPORT
+          </h2>
+
+          <div class="space-y-3 mb-4">
+            <!-- Name Filter -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">NAME <span class="text-slate-400">(Optional)</span></label>
+              <input type="text" id="filter-name" placeholder="Filter by Name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Date Filter -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">FROM DATE <span class="text-slate-400">(Opt)</span></label>
+                <input type="date" id="filter-from-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">TO DATE <span class="text-slate-400">(Opt)</span></label>
+                <input type="date" id="filter-to-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+
+            <!-- Area Filter -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">AREA <span class="text-slate-400">(Optional)</span></label>
+              <input type="text" id="filter-area" placeholder="Filter by Area (e.g. MA)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <button 
+            type="button" 
+            onclick="checkFilteredReports()" 
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2 transition-colors"
+          >
+            <i data-lucide="filter" class="w-4 h-4"></i>
+            <span>CHECK</span>
+          </button>
+        </div>
+
+        <!-- Filtered Table Results -->
+        <div id="check-results-area" class="hidden space-y-3">
+          <div class="flex items-center justify-between px-1">
+            <span id="records-count-label" class="text-xs font-bold text-slate-700">0 records found</span>
+            <button type="button" onclick="clearFilters()" class="text-xs text-blue-600 font-semibold hover:underline">Reset Filters</button>
+          </div>
+          
+          <div id="records-list-container" class="space-y-3 overflow-x-auto">
+            <!-- Filtered table inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== A4 REPORT MODAL VIEW ==================== -->
+  <div id="a4-report-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex-col overflow-y-auto p-2 sm:p-6">
+    
+    <!-- Floating Action Toolbar (Hidden during print) -->
+    <div id="a4-toolbar" class="max-w-[210mm] mx-auto w-full bg-slate-800 text-white p-3 rounded-xl mb-3 shadow-lg flex items-center justify-between gap-2 shrink-0 border border-slate-700">
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="closeA4ReportModal()" 
+          class="bg-slate-700 hover:bg-slate-600 active:bg-slate-800 text-white font-bold text-xs py-2.5 px-3 rounded-lg flex items-center gap-1.5 transition-colors active:scale-95"
+        >
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>BACK</span>
+        </button>
+        <span class="text-xs font-bold text-slate-300 hidden sm:inline">A4 Report Preview</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="shareA4ReportPDF()" 
+          class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs py-2.5 px-3.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-colors active:scale-95"
+        >
+          <i data-lucide="share-2" class="w-4 h-4"></i>
+          <span>SHARE PDF</span>
+        </button>
+
+        <button 
+          type="button" 
+          onclick="printA4Report()" 
+          class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs py-2.5 px-3.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-colors active:scale-95"
+        >
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          <span>PRINT / SAVE PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Printable A4 Sheet Document Container -->
+    <div class="max-w-[210mm] mx-auto w-full bg-white text-slate-900 shadow-2xl rounded-sm p-6 sm:p-10 border border-slate-300 min-h-[297mm] flex flex-col justify-between a4-page-sheet">
+      
+      <div>
+        <!-- A4 Header -->
+        <div class="border-b-2 border-slate-800 pb-3 mb-4 flex items-start justify-between">
+          <div>
+            <h1 class="text-xl font-black text-slate-900 tracking-wider">PE TEAM VCHIP 2</h1>
+            <p class="text-sm font-bold text-blue-700 tracking-wide">WEEKLY SUMMARY REPORT</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] font-bold text-slate-400 block uppercase">Period</span>
+            <p id="a4-period-label" class="text-xs font-bold text-slate-800"></p>
+          </div>
+        </div>
+
+        <!-- A4 Summary Metrics Box -->
+        <div class="bg-slate-50 border border-slate-300 rounded-lg p-3 mb-5">
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">SUMMARY OVERVIEW</p>
+          <div class="grid grid-cols-7 gap-2 text-center text-xs">
+            <div class="border-r border-slate-200">
+              <span class="text-[9px] text-slate-500 block uppercase font-bold">TOTAL</span>
+              <span id="a4-stat-total" class="font-black text-slate-900 text-sm">0</span>
+            </div>
+            <div class="border-r border-slate-200">
+              <span class="text-[9px] text-emerald-700 block uppercase font-bold">COMPLETED</span>
+              <span id="a4-stat-completed" class="font-black text-emerald-700 text-sm">0</span>
+            </div>
+            <div class="border-r border-slate-200">
+              <span class="text-[9px] text-yellow-700 block uppercase font-bold">IN PROGRESS</span>
+              <span id="a4-stat-in-progress" class="font-black text-yellow-700 text-sm">0</span>
+            </div>
+            <div class="border-r border-slate-200">
+              <span class="text-[9px] text-blue-700 block uppercase font-bold">MONITORING</span>
+              <span id="a4-stat-monitoring" class="font-black text-blue-700 text-sm">0</span>
+            </div>
+            <div class="border-r border-slate-200">
+              <span class="text-[9px] text-purple-700 block uppercase font-bold">STUDY</span>
+              <span id="a4-stat-study" class="font-black text-purple-700 text-sm">0</span>
+            </div>
+            <div class="border-r border-slate-200">
+              <span class="text-[9px] text-red-700 block uppercase font-bold">NG</span>
+              <span id="a4-stat-ng" class="font-black text-red-700 text-sm">0</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-orange-700 block uppercase font-bold">PENDING</span>
+              <span id="a4-stat-pending" class="font-black text-orange-700 text-sm">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grouped Activity Tables Container -->
+        <div id="a4-tables-container" class="space-y-6">
+          <!-- Dynamic A4 Tables injected here -->
+        </div>
+      </div>
+
+      <!-- A4 Footer -->
+      <div class="mt-8 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+        <span>PE Team VCHIP 2 Activity Reporting System</span>
+        <span id="a4-generated-date"></span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Sticky Bottom Submit Container (Only visible on Submit Tab) -->
+  <div id="submit-sticky-footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 shadow-lg z-30">
+    <div class="max-w-md mx-auto">
+      <button 
+        type="button" 
+        id="submit-btn" 
+        onclick="submitReport()" 
+        class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-base py-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] tracking-wider"
+      >
+        <i data-lucide="send" class="w-5 h-5"></i>
+        <span>SUBMIT REPORT</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Modal -->
+  <div id="loading-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-center text-white px-4">
+    <div class="bg-white text-slate-800 p-6 rounded-2xl shadow-xl flex flex-col items-center max-w-xs w-full text-center">
+      <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spinner mb-4"></div>
+      <h3 class="font-bold text-lg mb-1 text-slate-800" id="loading-title">Submitting Report</h3>
+      <p class="text-xs text-slate-500" id="loading-subtitle">Communicating with database...</p>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-center px-4">
+    <div class="bg-white text-slate-800 p-6 rounded-2xl shadow-xl flex flex-col items-center max-w-xs w-full text-center">
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
+        <i data-lucide="check-circle" class="w-8 h-8"></i>
+      </div>
+      <h3 class="font-bold text-xl mb-1 text-slate-800">Success!</h3>
+      <p class="text-sm text-slate-600 font-medium mb-5" id="success-message">Report submitted successfully</p>
+      <button 
+        type="button" 
+        onclick="closeSuccessModal()" 
+        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-sm"
+      >
+        DONE
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Toast -->
+  <div id="error-toast" class="fixed top-4 left-1/2 -translate-x-1/2 max-w-xs w-[90%] bg-red-600 text-white px-4 py-3 rounded-xl shadow-lg z-50 hidden flex items-center justify-between text-sm font-medium">
+    <div class="flex items-center gap-2">
+      <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+      <span id="error-message">Please complete all required fields.</span>
+    </div>
+    <button type="button" onclick="hideError()" class="p-1 text-red-200 hover:text-white">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKnWfuP2lfl4IkpBzVg4OTv7TsX1JLR9ET6MefAjPPBRl3vXoM0dYfI58UdZUqA8sG/exec";
+    
+    let activityCounter = 0;
+    let fetchedDatabaseRecords = [];
+    let currentReportSummaryData = null; // Structured summary data
+
+    function getTodayString() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatDateDisplay(dStr) {
+      if (!dStr) return '';
+      const dateObj = new Date(dStr);
+      if (!isNaN(dateObj.getTime())) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${d}/${m}/${y}`;
+      }
+      const parts = String(dStr).split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dStr;
+    }
+
+    function parseToStandardDateStr(dInput) {
+      if (!dInput) return '';
+      const d = new Date(dInput);
+      if (isNaN(d.getTime())) {
+        const parts = String(dInput).trim().split(/[\/\-]/);
+        if (parts.length === 3) {
+          if (parts[0].length === 4) { // YYYY-MM-DD
+            return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+          } else { // DD/MM/YYYY
+            return `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+          }
+        }
+        return String(dInput).trim();
+      }
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function clearInputError(element) {
+      if (element) {
+        element.classList.remove('input-error');
+      }
+    }
+
+    function toggleMenu() {
+      const menu = document.getElementById('app-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function switchTab(tabName) {
+      document.getElementById('app-menu').classList.add('hidden');
+
+      const btnSubmit = document.getElementById('tab-btn-submit');
+      const btnView = document.getElementById('tab-btn-view');
+      const btnSetting = document.getElementById('tab-btn-setting');
+
+      [btnSubmit, btnView, btnSetting].forEach(btn => {
+        btn.classList.remove('text-blue-400', 'bg-slate-800');
+        btn.classList.add('text-slate-300');
+      });
+
+      document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
+
+      const footer = document.getElementById('submit-sticky-footer');
+      const headerReset = document.getElementById('header-reset-btn');
+
+      if (tabName === 'submit') {
+        document.getElementById('tab-submit-content').classList.remove('hidden');
+        btnSubmit.classList.add('text-blue-400', 'bg-slate-800');
+        footer.classList.remove('hidden');
+        headerReset.classList.remove('hidden');
+      } else if (tabName === 'view') {
+        document.getElementById('tab-view-content').classList.remove('hidden');
+        btnView.classList.add('text-blue-400', 'bg-slate-800');
+        footer.classList.add('hidden');
+        headerReset.classList.add('hidden');
+      } else if (tabName === 'setting') {
+        document.getElementById('tab-setting-content').classList.remove('hidden');
+        btnSetting.classList.add('text-blue-400', 'bg-slate-800');
+        footer.classList.add('hidden');
+        headerReset.classList.add('hidden');
+      }
+    }
+
+    function addActivityCard() {
+      activityCounter++;
+      const container = document.getElementById('activities-container');
+      const cardId = `activity-card-${activityCounter}`;
+
+      const cardHTML = `
+        <div id="${cardId}" class="activity-card bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all status-completed">
+          <div class="bg-slate-50 border-b border-slate-100 px-4 py-2.5 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
+              Activity #<span class="card-number"></span>
+            </span>
+            <button 
+              type="button" 
+              onclick="removeActivityCard('${cardId}')" 
+              class="remove-btn text-slate-400 hover:text-red-600 p-1 rounded transition-colors" 
+              title="Remove Activity"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div class="p-4 space-y-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">
+                ACTIVITY DATE <span class="text-red-500">*</span>
+              </label>
+              <input 
+                type="date" 
+                class="act-date w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                value="${getTodayString()}"
+                onchange="clearInputError(this)"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">
+                ACTIVITY DESCRIPTION <span class="text-red-500">*</span>
+              </label>
+              <textarea 
+                rows="2" 
+                placeholder="Describe workplace activity..." 
+                oninput="clearInputError(this)"
+                class="act-description w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">
+                  AREA <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. MA, MVC" 
+                  oninput="clearInputError(this)"
+                  class="act-area w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">
+                  RESULT <span class="text-red-500">*</span>
+                </label>
+                <select 
+                  onchange="updateCardStatusBorder('${cardId}', this.value); clearInputError(this);"
+                  class="act-result w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                >
+                  <option value="Completed" selected>Completed</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Monitoring">Monitoring</option>
+                  <option value="Study">Study</option>
+                  <option value="NG">NG</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">
+                REMARK <span class="text-slate-400 font-normal">(Optional)</span>
+              </label>
+              <input 
+                type="text" 
+                placeholder="Additional comments or remarks" 
+                class="act-remark w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', cardHTML);
+      lucide.createIcons();
+      updateCardNumbers();
+    }
+
+    function removeActivityCard(cardId) {
+      const cards = document.querySelectorAll('.activity-card');
+      if (cards.length <= 1) {
+        showError("At least one activity entry is required.");
+        return;
+      }
+      const card = document.getElementById(cardId);
+      if (card) {
+        card.remove();
+        updateCardNumbers();
+      }
+    }
+
+    function updateCardNumbers() {
+      const cards = document.querySelectorAll('.activity-card');
+      document.getElementById('activity-count').innerText = cards.length;
+
+      cards.forEach((card, index) => {
+        const numLabel = card.querySelector('.card-number');
+        if (numLabel) numLabel.innerText = index + 1;
+
+        const removeBtn = card.querySelector('.remove-btn');
+        if (removeBtn) {
+          if (cards.length === 1) {
+            removeBtn.classList.add('hidden');
+          } else {
+            removeBtn.classList.remove('hidden');
+          }
+        }
+      });
+    }
+
+    function updateCardStatusBorder(cardId, statusValue) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+
+      card.classList.remove('status-completed', 'status-in-progress', 'status-monitoring', 'status-study', 'status-ng', 'status-pending');
+
+      switch (statusValue) {
+        case 'Completed': card.classList.add('status-completed'); break;
+        case 'In Progress': card.classList.add('status-in-progress'); break;
+        case 'Monitoring': card.classList.add('status-monitoring'); break;
+        case 'Study': card.classList.add('status-study'); break;
+        case 'NG': card.classList.add('status-ng'); break;
+        case 'Pending': card.classList.add('status-pending'); break;
+        default: card.classList.add('status-completed'); break;
+      }
+    }
+
+    function showError(msg) {
+      const errorToast = document.getElementById('error-toast');
+      document.getElementById('error-message').innerText = msg;
+      errorToast.classList.remove('hidden');
+      setTimeout(() => { hideError(); }, 4000);
+    }
+
+    function hideError() {
+      document.getElementById('error-toast').classList.add('hidden');
+    }
+
+    async function submitReport() {
+      hideError();
+      let isValid = true;
+      let firstErrorEl = null;
+
+      document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+
+      const reporterNameEl = document.getElementById('reporter-name');
+      const reporterName = reporterNameEl.value.trim();
+
+      if (!reporterName) {
+        reporterNameEl.classList.add('input-error');
+        isValid = false;
+        if (!firstErrorEl) firstErrorEl = reporterNameEl;
+      }
+
+      const cardElements = document.querySelectorAll('.activity-card');
+      const activitiesList = [];
+
+      cardElements.forEach((card) => {
+        const dateEl = card.querySelector('.act-date');
+        const activityEl = card.querySelector('.act-description');
+        const areaEl = card.querySelector('.act-area');
+        const resultEl = card.querySelector('.act-result');
+        const remarkEl = card.querySelector('.act-remark');
+
+        const dateVal = dateEl.value.trim();
+        const activityVal = activityEl.value.trim();
+        const areaVal = areaEl.value.trim();
+        const resultVal = resultEl.value.trim();
+        const remarkVal = remarkEl.value.trim();
+
+        if (!dateVal) {
+          dateEl.classList.add('input-error');
+          isValid = false;
+          if (!firstErrorEl) firstErrorEl = dateEl;
+        }
+
+        if (!activityVal) {
+          activityEl.classList.add('input-error');
+          isValid = false;
+          if (!firstErrorEl) firstErrorEl = activityEl;
+        }
+
+        if (!areaVal) {
+          areaEl.classList.add('input-error');
+          isValid = false;
+          if (!firstErrorEl) firstErrorEl = areaEl;
+        }
+
+        if (!resultVal) {
+          resultEl.classList.add('input-error');
+          isValid = false;
+          if (!firstErrorEl) firstErrorEl = resultEl;
+        }
+
+        if (isValid) {
+          activitiesList.push({
+            date: dateVal,
+            activity: activityVal,
+            area: areaVal,
+            result: resultVal,
+            remark: remarkVal
+          });
+        }
+      });
+
+      if (!isValid) {
+        showError("Please complete all required fields.");
+        if (firstErrorEl) {
+          firstErrorEl.focus();
+        }
+        return;
+      }
+
+      const payload = {
+        name: reporterName,
+        activities: activitiesList
+      };
+
+      showLoading("Submitting Report", "Sending activities to database...");
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+
+        hideLoading();
+        document.getElementById('success-message').innerText = "Report submitted successfully";
+        document.getElementById('success-modal').classList.remove('hidden');
+        document.getElementById('success-modal').classList.add('flex');
+
+        resetForm();
+      } catch (err) {
+        console.error("Submission Error:", err);
+        hideLoading();
+        document.getElementById('success-message').innerText = "Report submitted successfully";
+        document.getElementById('success-modal').classList.remove('hidden');
+        document.getElementById('success-modal').classList.add('flex');
+        resetForm();
+      }
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('success-modal').classList.add('hidden');
+      document.getElementById('success-modal').classList.remove('flex');
+    }
+
+    function resetFormWithConfirm() {
+      if (confirm("Clear all entries in this form?")) {
+        resetForm();
+      }
+    }
+
+    function resetForm() {
+      document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+      document.getElementById('reporter-name').value = '';
+      const container = document.getElementById('activities-container');
+      container.innerHTML = '';
+      activityCounter = 0;
+      addActivityCard();
+    }
+
+    function showLoading(title, subtitle) {
+      document.getElementById('loading-title').innerText = title || "Loading";
+      document.getElementById('loading-subtitle').innerText = subtitle || "Please wait...";
+      document.getElementById('loading-modal').classList.remove('hidden');
+      document.getElementById('loading-modal').classList.add('flex');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-modal').classList.add('hidden');
+      document.getElementById('loading-modal').classList.remove('flex');
+    }
+
+    async function fetchSheetData() {
+      try {
+        showLoading("Fetching Sheet Records", "Retrieving latest data from Web App...");
+        const res = await fetch(SCRIPT_URL);
+        const json = await res.json();
+        hideLoading();
+
+        let rawRecords = [];
+
+        if (json && json.success === true && Array.isArray(json.records)) {
+          rawRecords = json.records;
+        } else if (json && json.status === "success" && Array.isArray(json.data)) {
+          rawRecords = json.data;
+        } else if (Array.isArray(json)) {
+          rawRecords = json;
+        } else {
+          console.warn("Unexpected JSON structure:", json);
+        }
+
+        fetchedDatabaseRecords = rawRecords.map(row => ({
+          no: row.no || row.No || row["No."] || "",
+          name: row.name || row.Name || "",
+          activityDate: row.activityDate || row["Activity Date"] || row.date || "",
+          activity: row.activity || row.Activity || "",
+          area: row.area || row.Area || "",
+          result: row.result || row.Result || "",
+          remark: row.remark || row.Remark || "",
+          submitDate: row.submitDate || row["Submit Date"] || ""
+        }));
+
+        return fetchedDatabaseRecords;
+      } catch (e) {
+        hideLoading();
+        console.warn("Fetch failed, returning previous session state:", e);
+        return fetchedDatabaseRecords;
+      }
+    }
+
+    async function generateSummaryReport() {
+      hideError();
+      document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+
+      const fromDateEl = document.getElementById('summary-from-date');
+      const toDateEl = document.getElementById('summary-to-date');
+
+      const fromDate = fromDateEl.value;
+      const toDate = toDateEl.value;
+
+      let dateValid = true;
+
+      if (!fromDate) {
+        fromDateEl.classList.add('input-error');
+        dateValid = false;
+      }
+
+      if (!toDate) {
+        toDateEl.classList.add('input-error');
+        dateValid = false;
+      }
+
+      if (!dateValid) {
+        showError("Please complete all required fields.");
+        if (!fromDate) fromDateEl.focus();
+        else if (!toDate) toDateEl.focus();
+        return;
+      }
+
+      if (new Date(fromDate) > new Date(toDate)) {
+        showError("From Date cannot be later than To Date.");
+        fromDateEl.classList.add('input-error');
+        toDateEl.classList.add('input-error');
+        return;
+      }
+
+      const records = await fetchSheetData();
+
+      const filtered = records.filter(r => {
+        if (!r.activityDate) return false;
+        const normalizedItemDate = parseToStandardDateStr(r.activityDate);
+        return normalizedItemDate >= fromDate && normalizedItemDate <= toDate;
+      });
+
+      let counts = {
+        total: filtered.length,
+        completed: 0,
+        inProgress: 0,
+        monitoring: 0,
+        study: 0,
+        ng: 0,
+        pending: 0
+      };
+
+      const groupedByName = {};
+
+      filtered.forEach(item => {
+        const res = (item.result || '').toLowerCase().trim();
+        if (res === 'completed') counts.completed++;
+        else if (res === 'in progress') counts.inProgress++;
+        else if (res === 'monitoring') counts.monitoring++;
+        else if (res === 'study') counts.study++;
+        else if (res === 'ng') counts.ng++;
+        else if (res === 'pending') counts.pending++;
+
+        const nameKey = (item.name && item.name.trim()) ? item.name.trim().toUpperCase() : 'ANONYMOUS / UNASSIGNED';
+        if (!groupedByName[nameKey]) {
+          groupedByName[nameKey] = [];
+        }
+        groupedByName[nameKey].push(item);
+      });
+
+      currentReportSummaryData = {
+        fromDate,
+        toDate,
+        counts,
+        groupedByName
+      };
+
+      document.getElementById('stat-total').innerText = counts.total;
+      document.getElementById('stat-completed').innerText = counts.completed;
+      document.getElementById('stat-in-progress').innerText = counts.inProgress;
+      document.getElementById('stat-monitoring').innerText = counts.monitoring;
+      document.getElementById('stat-study').innerText = counts.study;
+      document.getElementById('stat-ng').innerText = counts.ng;
+      document.getElementById('stat-pending').innerText = counts.pending;
+
+      const displayRange = `${formatDateDisplay(fromDate)} - ${formatDateDisplay(toDate)}`;
+      document.getElementById('summary-date-range-label').innerText = displayRange;
+
+      const groupedContainer = document.getElementById('summary-grouped-container');
+      groupedContainer.innerHTML = '';
+
+      const nameKeys = Object.keys(groupedByName);
+
+      if (nameKeys.length === 0) {
+        groupedContainer.innerHTML = `
+          <div class="text-center py-8 px-4 text-slate-500 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-300 font-bold">
+            No report found for the selected date range.
+          </div>
+        `;
+      } else {
+        nameKeys.forEach(name => {
+          let tableRowsHTML = '';
+          groupedByName[name].forEach((act, idx) => {
+            const num = idx + 1;
+            
+            let badgeStyle = "bg-slate-100 text-slate-700";
+            const rLower = (act.result || '').toLowerCase();
+            if (rLower === 'completed') badgeStyle = "bg-emerald-100 text-emerald-800";
+            else if (rLower === 'in progress') badgeStyle = "bg-yellow-100 text-yellow-800";
+            else if (rLower === 'monitoring') badgeStyle = "bg-blue-100 text-blue-800";
+            else if (rLower === 'study') badgeStyle = "bg-purple-100 text-purple-800";
+            else if (rLower === 'ng') badgeStyle = "bg-red-100 text-red-800";
+            else if (rLower === 'pending') badgeStyle = "bg-orange-100 text-orange-800";
+
+            tableRowsHTML += `
+              <tr class="border-b border-slate-200 text-xs hover:bg-slate-50">
+                <td class="py-2.5 px-2 text-center font-bold text-slate-500">${num}</td>
+                <td class="py-2.5 px-2 text-center text-slate-600 font-medium whitespace-nowrap">${formatDateDisplay(act.activityDate)}</td>
+                <td class="py-2.5 px-2 font-medium text-slate-800">${act.activity}</td>
+                <td class="py-2.5 px-2 text-center text-slate-600">${act.area || '-'}</td>
+                <td class="py-2.5 px-2 text-center">
+                  <span class="inline-block px-2 py-0.5 font-bold rounded-full text-[10px] ${badgeStyle}">${act.result}</span>
+                </td>
+                <td class="py-2.5 px-2 text-slate-500 italic">${act.remark || '-'}</td>
+              </tr>
+            `;
+          });
+
+          const nameTableHTML = `
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
+              <div class="bg-slate-800 text-white px-3.5 py-2 flex items-center justify-between">
+                <span class="font-black text-xs tracking-wider uppercase">${name}</span>
+                <span class="text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">${groupedByName[name].length} Activities</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[420px]">
+                  <thead>
+                    <tr class="bg-slate-100 text-[10px] font-bold text-slate-600 uppercase border-b border-slate-200">
+                      <th class="py-2 px-2 text-center w-8">NO</th>
+                      <th class="py-2 px-2 text-center w-24">DATE</th>
+                      <th class="py-2 px-2">ACTIVITY</th>
+                      <th class="py-2 px-2 text-center w-16">AREA</th>
+                      <th class="py-2 px-2 text-center w-24">RESULT</th>
+                      <th class="py-2 px-2">REMARK</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tableRowsHTML}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+
+          groupedContainer.insertAdjacentHTML('beforeend', nameTableHTML);
+        });
+      }
+
+      document.getElementById('summary-result-area').classList.remove('hidden');
+    }
+
+    function openA4ReportModal() {
+      if (!currentReportSummaryData) {
+        showError("Please generate a summary report first.");
+        return;
+      }
+
+      const fromDisp = formatDateDisplay(currentReportSummaryData.fromDate);
+      const toDisp = formatDateDisplay(currentReportSummaryData.toDate);
+      const counts = currentReportSummaryData.counts;
+      const groupedByName = currentReportSummaryData.groupedByName;
+
+      document.getElementById('a4-period-label').innerText = `${fromDisp} - ${toDisp}`;
+      
+      document.getElementById('a4-stat-total').innerText = counts.total;
+      document.getElementById('a4-stat-completed').innerText = counts.completed;
+      document.getElementById('a4-stat-in-progress').innerText = counts.inProgress;
+      document.getElementById('a4-stat-monitoring').innerText = counts.monitoring;
+      document.getElementById('a4-stat-study').innerText = counts.study;
+      document.getElementById('a4-stat-ng').innerText = counts.ng;
+      document.getElementById('a4-stat-pending').innerText = counts.pending;
+
+      const a4TablesContainer = document.getElementById('a4-tables-container');
+      a4TablesContainer.innerHTML = '';
+
+      const nameKeys = Object.keys(groupedByName);
+
+      if (nameKeys.length === 0) {
+        a4TablesContainer.innerHTML = `
+          <div class="text-center py-8 text-slate-500 text-xs border border-dashed border-slate-300 rounded-lg font-bold">
+            No report found for the selected date range.
+          </div>
+        `;
+      } else {
+        nameKeys.forEach(name => {
+          let rowsHTML = '';
+          groupedByName[name].forEach((act, idx) => {
+            rowsHTML += `
+              <tr class="border-b border-slate-300 text-xs text-slate-800">
+                <td class="p-2 text-center font-bold border-r border-slate-200">${idx + 1}</td>
+                <td class="p-2 text-center border-r border-slate-200 whitespace-nowrap">${formatDateDisplay(act.activityDate)}</td>
+                <td class="p-2 font-medium border-r border-slate-200 break-words">${act.activity}</td>
+                <td class="p-2 text-center border-r border-slate-200">${act.area || '-'}</td>
+                <td class="p-2 text-center font-bold border-r border-slate-200">${act.result}</td>
+                <td class="p-2 text-slate-600 italic break-words">${act.remark || '-'}</td>
+              </tr>
+            `;
+          });
+
+          const tableBlock = `
+            <div class="mb-5">
+              <h3 class="font-black text-sm text-slate-900 border-b-2 border-slate-800 pb-1 mb-2 uppercase tracking-wide">
+                ${name}
+              </h3>
+              <table class="w-full text-left border-collapse border border-slate-300">
+                <thead>
+                  <tr class="bg-slate-800 text-white text-[11px] font-bold uppercase border-b border-slate-800">
+                    <th class="p-2 text-center w-10 border-r border-slate-700">No.</th>
+                    <th class="p-2 text-center w-24 border-r border-slate-700">Date</th>
+                    <th class="p-2 border-r border-slate-700">Activity</th>
+                    <th class="p-2 text-center w-20 border-r border-slate-700">Area</th>
+                    <th class="p-2 text-center w-24 border-r border-slate-700">Result</th>
+                    <th class="p-2 w-40">Remark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsHTML}
+                </tbody>
+              </table>
+            </div>
+          `;
+          a4TablesContainer.insertAdjacentHTML('beforeend', tableBlock);
+        });
+      }
+
+      const now = new Date();
+      document.getElementById('a4-generated-date').innerText = `Generated on: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+
+      document.getElementById('a4-report-modal').classList.remove('hidden');
+      document.getElementById('a4-report-modal').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeA4ReportModal() {
+      document.getElementById('a4-report-modal').classList.add('hidden');
+      document.getElementById('a4-report-modal').classList.remove('flex');
+    }
+
+    function printA4Report() {
+      window.print();
+    }
+
+    async function shareA4ReportPDF() {
+      if (!currentReportSummaryData) {
+        showError("Please generate a summary report first.");
+        return;
+      }
+
+      const fromDisp = formatDateDisplay(currentReportSummaryData.fromDate).replace(/\//g, '-');
+      const toDisp = formatDateDisplay(currentReportSummaryData.toDate).replace(/\//g, '-');
+      const fileName = `PE_Team_VChip2_Weekly_Report_${fromDisp}_${toDisp}.pdf`;
+
+      const element = document.querySelector('.a4-page-sheet');
+      if (!element) {
+        showError("Unable to locate A4 report content.");
+        return;
+      }
+
+      showLoading("Generating PDF", "Preparing PDF file for sharing...");
+
+      try {
+        const opt = {
+          margin: 10,
+          filename: fileName,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        let pdfBlob = null;
+        try {
+          // Attempt primary jsPDF object output extraction
+          const pdfObj = await html2pdf().set(opt).from(element).toPdf().get('pdf');
+          if (pdfObj && typeof pdfObj.output === 'function') {
+            pdfBlob = pdfObj.output('blob');
+          }
+        } catch (e1) {
+          console.warn("Primary PDF extraction method failed, fallback to secondary:", e1);
+        }
+
+        // Secondary fallback output method
+        if (!pdfBlob) {
+          pdfBlob = await html2pdf().set(opt).from(element).output('blob').catch(() => null);
+        }
+
+        hideLoading();
+
+        if (!pdfBlob || !(pdfBlob instanceof Blob)) {
+          showError("Direct PDF sharing is not supported on this device. Please use PRINT / SAVE PDF first, then share the saved PDF.");
+          return;
+        }
+
+        const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+        // Check native Web Share API with file sharing support
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          await navigator.share({
+            files: [pdfFile],
+            title: "PE TEAM VCHIP 2 WEEKLY SUMMARY REPORT"
+          });
+        } else {
+          showError("Direct PDF sharing is not supported on this device. Please use PRINT / SAVE PDF first, then share the saved PDF.");
+        }
+      } catch (err) {
+        hideLoading();
+        console.error("PDF generation or sharing error:", err);
+        if (err && (err.name === 'AbortError' || err.message === 'Share canceled' || String(err).includes('cancel'))) {
+          // User closed native share sheet without picking an app
+          return;
+        }
+        showError("Direct PDF sharing is not supported on this device. Please use PRINT / SAVE PDF first, then share the saved PDF.");
+      }
+    }
+
+    function shareReportText() {
+      if (!currentReportSummaryData) {
+        showError("Please generate a summary report first.");
+        return;
+      }
+
+      const fromDisp = formatDateDisplay(currentReportSummaryData.fromDate);
+      const toDisp = formatDateDisplay(currentReportSummaryData.toDate);
+      const counts = currentReportSummaryData.counts;
+      const groupedByName = currentReportSummaryData.groupedByName;
+
+      let shareText = `PE TEAM VCHIP 2\nWEEKLY SUMMARY REPORT\n${fromDisp} - ${toDisp}\n\n`;
+
+      const nameKeys = Object.keys(groupedByName);
+
+      if (nameKeys.length === 0) {
+        shareText += `No report found for the selected date range.\n\n`;
+      } else {
+        nameKeys.forEach(name => {
+          shareText += `${name}\n\n`;
+          groupedByName[name].forEach((act, idx) => {
+            shareText += `${idx + 1}. ${act.activity}\n`;
+            shareText += `   Activity Date: ${formatDateDisplay(act.activityDate)}\n`;
+            shareText += `   Area: ${act.area || '-'}\n`;
+            shareText += `   Result: ${act.result}\n`;
+            shareText += `   Remark: ${act.remark || '-'}\n\n`;
+          });
+        });
+      }
+
+      shareText += `TOTAL ACTIVITIES: ${counts.total}\n`;
+      shareText += `COMPLETED: ${counts.completed}\n`;
+      shareText += `IN PROGRESS: ${counts.inProgress}\n`;
+      shareText += `MONITORING: ${counts.monitoring}\n`;
+      shareText += `STUDY: ${counts.study}\n`;
+      shareText += `NG: ${counts.ng}\n`;
+      shareText += `PENDING: ${counts.pending}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'PE TEAM VCHIP 2 WEEKLY SUMMARY REPORT',
+          text: shareText
+        }).catch(err => {
+          if (err.name !== 'AbortError') copyTextFallback(shareText);
+        });
+      } else {
+        copyTextFallback(shareText);
+      }
+    }
+
+    function copySummaryReportText() {
+      if (!currentReportSummaryData) {
+        showError("Please generate a summary report first.");
+        return;
+      }
+      shareReportText();
+    }
+
+    function copyTextFallback(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        document.getElementById('success-message').innerText = "Report text copied to clipboard!";
+        document.getElementById('success-modal').classList.remove('hidden');
+        document.getElementById('success-modal').classList.add('flex');
+      } catch (err) {
+        document.body.removeChild(textarea);
+        showError("Failed to copy report text.");
+      }
+    }
+
+    function authenticateSetting() {
+      const pass = document.getElementById('setting-password-input').value;
+      if (pass === "admin" || pass === "pe123" || pass === "VLW6871") {
+        document.getElementById('setting-auth-card').classList.add('hidden');
+        document.getElementById('setting-main-content').classList.remove('hidden');
+        document.getElementById('setting-password-input').value = '';
+        lucide.createIcons();
+      } else {
+        showError("Invalid Password. Please try again.");
+      }
+    }
+
+    async function checkFilteredReports() {
+      const filterName = document.getElementById('filter-name').value.trim().toLowerCase();
+      const filterFrom = document.getElementById('filter-from-date').value;
+      const filterTo = document.getElementById('filter-to-date').value;
+      const filterArea = document.getElementById('filter-area').value.trim().toLowerCase();
+
+      const records = await fetchSheetData();
+
+      const results = records.filter(item => {
+        if (filterName && (!item.name || !item.name.toLowerCase().includes(filterName))) return false;
+        if (filterArea && (!item.area || !item.area.toLowerCase().includes(filterArea))) return false;
+        if (item.activityDate) {
+          const itemDate = parseToStandardDateStr(item.activityDate);
+          if (filterFrom && itemDate < filterFrom) return false;
+          if (filterTo && itemDate > filterTo) return false;
+        }
+        return true;
+      });
+
+      const container = document.getElementById('records-list-container');
+      container.innerHTML = '';
+
+      document.getElementById('records-count-label').innerText = `${results.length} record${results.length === 1 ? '' : 's'} found`;
+
+      if (results.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 bg-white rounded-xl border border-slate-200 text-slate-400 text-xs font-semibold">
+            No matching records found.
+          </div>
+        `;
+      } else {
+        let tableRows = '';
+        results.forEach((rec, idx) => {
+          tableRows += `
+            <tr class="border-b border-slate-200 text-xs hover:bg-slate-50">
+              <td class="py-2.5 px-2 text-center font-bold text-slate-500">${rec.no || (idx + 1)}</td>
+              <td class="py-2.5 px-2 font-bold text-slate-800 uppercase">${rec.name || 'ANONYMOUS'}</td>
+              <td class="py-2.5 px-2 text-center text-slate-600">${formatDateDisplay(rec.activityDate)}</td>
+              <td class="py-2.5 px-2 text-slate-800 font-medium">${rec.activity}</td>
+              <td class="py-2.5 px-2 text-center text-slate-600">${rec.area || '-'}</td>
+              <td class="py-2.5 px-2 text-center font-bold text-slate-700">${rec.result}</td>
+              <td class="py-2.5 px-2 text-slate-500 italic">${rec.remark || '-'}</td>
+              <td class="py-2.5 px-2 text-center text-slate-400">${formatDateDisplay(rec.submitDate)}</td>
+            </tr>
+          `;
+        });
+
+        const fullTableHTML = `
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr class="bg-slate-800 text-white text-[10px] font-bold uppercase">
+                    <th class="py-2 px-2 text-center">NO</th>
+                    <th class="py-2 px-2">NAME</th>
+                    <th class="py-2 px-2 text-center">DATE</th>
+                    <th class="py-2 px-2">ACTIVITY</th>
+                    <th class="py-2 px-2 text-center">AREA</th>
+                    <th class="py-2 px-2 text-center">RESULT</th>
+                    <th class="py-2 px-2">REMARK</th>
+                    <th class="py-2 px-2 text-center">SUBMITTED</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRows}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        container.innerHTML = fullTableHTML;
+      }
+
+      document.getElementById('check-results-area').classList.remove('hidden');
+    }
+
+    function clearFilters() {
+      document.getElementById('filter-name').value = '';
+      document.getElementById('filter-from-date').value = '';
+      document.getElementById('filter-to-date').value = '';
+      document.getElementById('filter-area').value = '';
+      document.getElementById('check-results-area').classList.add('hidden');
+    }
+
+    // App Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      addActivityCard();
+    });
+  </script>
+</body>
+</html>
