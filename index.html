@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PE Team Report</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,15 +15,6 @@
     /* Prevent auto-zoom on mobile devices */
     input, select, textarea, button {
       font-size: 16px !important;
-    }
-
-    /* Top safe area spacing to clear Android status bar / clock */
-    header {
-      padding-top: max(28px, env(safe-area-inset-top, 32px)) !important;
-    }
-
-    #a4-report-modal {
-      padding-top: max(24px, env(safe-area-inset-top, 28px)) !important;
     }
     
     .status-completed { border-left: 6px solid #16a34a; }
@@ -62,7 +53,7 @@
       }
 
       /* Hide App UI Chrome on Print */
-      header, nav, #submit-sticky-footer, .no-print, #tab-submit-content, #tab-setting-content, #a4-toolbar {
+      header, nav, #submit-sticky-footer, .no-print, #tab-submit-content, #tab-setting-content, #a4-toolbar, #login-screen {
         display: none !important;
       }
 
@@ -103,329 +94,395 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans pb-28 select-none">
 
-  <!-- Header & Navigation -->
-  <header class="bg-slate-800 text-white shadow-md sticky top-0 z-30">
-    <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-2.5">
-        <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
-          <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-base leading-tight tracking-wide">PE TEAM REPORT</h1>
-          <p class="text-[11px] text-slate-300">Activity Reporting System</p>
-        </div>
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="login-screen" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-4">
+    <div class="max-w-xs w-full bg-white rounded-2xl shadow-xl p-6 text-center border border-slate-200">
+      <div class="w-14 h-14 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200">
+        <i data-lucide="lock" class="w-7 h-7 text-blue-600"></i>
       </div>
-
-      <!-- Header Right Buttons -->
-      <div class="flex items-center space-x-1">
-        <button type="button" onclick="resetFormWithConfirm()" id="header-reset-btn" class="text-slate-400 hover:text-white p-2 rounded-lg" title="Clear Form">
-          <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-        </button>
-        <button type="button" onclick="toggleMenu()" class="text-white bg-slate-700 hover:bg-slate-600 p-2 rounded-lg transition-colors flex items-center gap-1">
-          <i data-lucide="menu" class="w-5 h-5"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Dropdown Menu / Nav Tabs -->
-    <nav id="app-menu" class="bg-slate-900 border-t border-slate-700 hidden">
-      <div class="max-w-md mx-auto grid grid-cols-3 text-center text-xs font-bold divide-x divide-slate-800">
-        <button type="button" onclick="switchTab('submit')" id="tab-btn-submit" class="py-3 px-2 text-blue-400 bg-slate-800 flex items-center justify-center gap-1.5">
-          <i data-lucide="pen-tool" class="w-4 h-4"></i>
-          <span>REPORT</span>
-        </button>
-        <button type="button" onclick="switchTab('view')" id="tab-btn-view" class="py-3 px-2 text-slate-300 hover:text-white flex items-center justify-center gap-1.5">
-          <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
-          <span>VIEW</span>
-        </button>
-        <button type="button" onclick="switchTab('setting')" id="tab-btn-setting" class="py-3 px-2 text-slate-300 hover:text-white flex items-center justify-center gap-1.5">
-          <i data-lucide="settings" class="w-4 h-4"></i>
-          <span>SETTING</span>
-        </button>
-      </div>
-    </nav>
-  </header>
-
-  <!-- Main Container -->
-  <main class="max-w-md mx-auto w-full px-3 pt-4 flex-1">
-
-    <!-- ==================== TAB 1: SUBMIT REPORT ==================== -->
-    <div id="tab-submit-content" class="tab-page">
-      <!-- Reporter Section -->
-      <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4">
-        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-          <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <i data-lucide="user" class="w-4 h-4 text-blue-600"></i>
-            Reporter Info
-          </h2>
-          <span class="text-xs text-red-500 font-bold">* Required</span>
-        </div>
-        <div>
-          <label for="reporter-name" class="block text-xs font-semibold text-slate-600 mb-1">
-            NAME <span class="text-red-500">*</span>
-          </label>
+      <h1 class="font-black text-lg text-slate-800 tracking-wide uppercase">PE TEAM REPORT</h1>
+      <p class="text-xs text-slate-500 mb-6 font-medium">Activity Reporting System</p>
+      
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+        <div class="text-left">
+          <label for="login-pin" class="block text-xs font-bold text-slate-600 mb-1.5 tracking-wider uppercase">ENTER 4-DIGIT PIN</label>
           <div class="relative">
             <input 
-              type="text" 
-              id="reporter-name" 
-              placeholder="Enter your name (e.g. RAHMAT)" 
-              oninput="clearInputError(this)"
-              class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all uppercase placeholder:normal-case"
+              type="password" 
+              id="login-pin" 
+              inputmode="numeric" 
+              maxlength="4" 
+              placeholder="••••" 
+              oninput="handlePinInput(this)"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center text-lg font-black tracking-widest text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              required
             />
+            <button type="button" onclick="togglePinVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+              <i data-lucide="eye" id="pin-eye-icon" class="w-5 h-5"></i>
+            </button>
           </div>
+          <p id="login-error-msg" class="text-xs font-semibold text-red-500 mt-2 text-center hidden"></p>
         </div>
-      </section>
-
-      <!-- Activities Section -->
-      <div class="flex items-center justify-between mb-3 px-1">
-        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-          <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
-          Activities Logged (<span id="activity-count">1</span>)
-        </h2>
-        <span class="text-xs text-red-500 font-medium">* Required except Remark</span>
-      </div>
-
-      <!-- Container for dynamic activity cards -->
-      <div id="activities-container" class="space-y-4">
-        <!-- Dynamic Cards inserted here -->
-      </div>
-
-      <!-- Add Activity Button -->
-      <button 
-        type="button" 
-        onclick="addActivityCard()" 
-        class="mt-4 w-full bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-800 font-bold py-3.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-colors border border-slate-300"
-      >
-        <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600"></i>
-        <span>+ ADD ACTIVITY</span>
-      </button>
+        
+        <button 
+          type="submit" 
+          id="login-submit-btn" 
+          class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm tracking-wider"
+        >
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>LOGIN</span>
+        </button>
+      </form>
     </div>
+  </div>
 
-    <!-- ==================== TAB 2: VIEW - WEEKLY SUMMARY ==================== -->
-    <div id="tab-view-content" class="tab-page hidden space-y-4">
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-        <div class="text-center mb-4 pb-3 border-b border-slate-100">
-          <h2 class="text-base font-black text-slate-800 tracking-wide uppercase">PE TEAM VCHIP 2</h2>
-          <p class="text-xs font-bold text-blue-600 tracking-wider uppercase">WEEKLY SUMMARY REPORT</p>
-        </div>
+  <!-- ==================== MAIN APPLICATION WRAPPER ==================== -->
+  <div id="app-main-wrapper" class="hidden flex-col min-h-screen">
 
-        <!-- Date Range Filter -->
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">FROM DATE <span class="text-red-500">*</span></label>
-            <input type="date" id="summary-from-date" onchange="clearInputError(this)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500">
+    <!-- Header & Navigation -->
+    <header class="bg-slate-800 text-white shadow-md sticky top-0 z-30">
+      <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">TO DATE <span class="text-red-500">*</span></label>
-            <input type="date" id="summary-to-date" onchange="clearInputError(this)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500">
+            <h1 class="font-bold text-base leading-tight tracking-wide">PE TEAM REPORT</h1>
+            <p class="text-[11px] text-slate-300">Activity Reporting System</p>
           </div>
         </div>
 
+        <!-- Header Right Buttons -->
+        <div class="flex items-center space-x-1">
+          <button type="button" onclick="resetFormWithConfirm()" id="header-reset-btn" class="text-slate-400 hover:text-white p-2 rounded-lg" title="Clear Form">
+            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+          </button>
+          <button type="button" onclick="toggleMenu()" class="text-white bg-slate-700 hover:bg-slate-600 p-2 rounded-lg transition-colors flex items-center gap-1">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dropdown Menu / Nav Tabs -->
+      <nav id="app-menu" class="bg-slate-900 border-t border-slate-700 hidden">
+        <div class="max-w-md mx-auto grid grid-cols-4 text-center text-xs font-bold divide-x divide-slate-800">
+          <button type="button" onclick="switchTab('submit')" id="tab-btn-submit" class="py-3 px-2 text-blue-400 bg-slate-800 flex items-center justify-center gap-1.5">
+            <i data-lucide="pen-tool" class="w-4 h-4"></i>
+            <span>REPORT</span>
+          </button>
+          <button type="button" onclick="switchTab('view')" id="tab-btn-view" class="py-3 px-2 text-slate-300 hover:text-white flex items-center justify-center gap-1.5">
+            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            <span>VIEW</span>
+          </button>
+          <button type="button" onclick="switchTab('setting')" id="tab-btn-setting" class="py-3 px-2 text-slate-300 hover:text-white flex items-center justify-center gap-1.5">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+            <span>SETTING</span>
+          </button>
+          <button type="button" onclick="confirmLogout()" id="tab-btn-logout" class="py-3 px-2 text-red-400 hover:text-red-300 flex items-center justify-center gap-1.5">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>LOGOUT</span>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto w-full px-3 pt-4 flex-1">
+
+      <!-- ==================== TAB 1: SUBMIT REPORT ==================== -->
+      <div id="tab-submit-content" class="tab-page">
+        <!-- Reporter Section -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4">
+          <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+            <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="user" class="w-4 h-4 text-blue-600"></i>
+              Reporter Info
+            </h2>
+            <span class="text-xs text-red-500 font-bold">* Required</span>
+          </div>
+          <div>
+            <label for="reporter-name" class="block text-xs font-semibold text-slate-600 mb-1">
+              NAME <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="reporter-name" 
+                placeholder="Enter your name (e.g. RAHMAT)" 
+                oninput="clearInputError(this)"
+                class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all uppercase placeholder:normal-case"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Activities Section -->
+        <div class="flex items-center justify-between mb-3 px-1">
+          <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-blue-600"></i>
+            Activities Logged (<span id="activity-count">1</span>)
+          </h2>
+          <span class="text-xs text-red-500 font-medium">* Required except Remark</span>
+        </div>
+
+        <!-- Container for dynamic activity cards -->
+        <div id="activities-container" class="space-y-4">
+          <!-- Dynamic Cards inserted here -->
+        </div>
+
+        <!-- Add Activity Button -->
         <button 
           type="button" 
-          onclick="generateSummaryReport()" 
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2 transition-colors"
+          onclick="addActivityCard()" 
+          class="mt-4 w-full bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-800 font-bold py-3.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-colors border border-slate-300"
         >
-          <i data-lucide="file-text" class="w-4 h-4"></i>
-          <span>GENERATE SUMMARY</span>
+          <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600"></i>
+          <span>+ ADD ACTIVITY</span>
         </button>
       </div>
 
-      <!-- Summary Results Section -->
-      <div id="summary-result-area" class="hidden space-y-4">
-        
-        <!-- Action Banner with VIEW A4 REPORT Button -->
-        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+      <!-- ==================== TAB 2: VIEW - WEEKLY SUMMARY ==================== -->
+      <div id="tab-view-content" class="tab-page hidden space-y-4">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <div class="text-center mb-4 pb-3 border-b border-slate-100">
+            <h2 class="text-base font-black text-slate-800 tracking-wide uppercase">PE TEAM VCHIP 2</h2>
+            <p class="text-xs font-bold text-blue-600 tracking-wider uppercase">WEEKLY SUMMARY REPORT</p>
+          </div>
+
+          <!-- Date Range Filter -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
             <div>
-              <p class="text-xs font-bold text-slate-800 uppercase tracking-wide">A4 Official Report</p>
-              <p class="text-[10px] text-slate-500">Formatted printable factory summary</p>
+              <label class="block text-xs font-bold text-slate-600 mb-1">FROM DATE <span class="text-red-500">*</span></label>
+              <input type="date" id="summary-from-date" onchange="clearInputError(this)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500">
             </div>
-            <span id="summary-date-range-label" class="text-[11px] text-blue-600 font-semibold"></span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <button 
-              type="button" 
-              onclick="openA4ReportModal()" 
-              class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors col-span-2"
-            >
-              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-400"></i>
-              <span>VIEW A4 REPORT</span>
-            </button>
-
-            <button 
-              type="button" 
-              onclick="shareReportText()" 
-              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm transition-colors"
-            >
-              <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-              <span>SHARE REPORT</span>
-            </button>
-
-            <button 
-              type="button" 
-              onclick="copySummaryReportText()" 
-              class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs py-2.5 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm transition-colors"
-            >
-              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-              <span>COPY REPORT</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Overview Metrics Grid -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Overall Status Metrics</h3>
-          <div class="grid grid-cols-3 gap-2 text-center">
-            <div class="bg-slate-100 p-2 rounded-lg border border-slate-200 col-span-3">
-              <p class="text-[10px] text-slate-500 font-bold uppercase">Total Activities</p>
-              <p id="stat-total" class="text-xl font-black text-slate-800">0</p>
-            </div>
-            <div class="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-              <p class="text-[10px] text-emerald-700 font-bold uppercase">Completed</p>
-              <p id="stat-completed" class="text-base font-black text-emerald-700">0</p>
-            </div>
-            <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200">
-              <p class="text-[10px] text-yellow-700 font-bold uppercase">In Progress</p>
-              <p id="stat-in-progress" class="text-base font-black text-yellow-700">0</p>
-            </div>
-            <div class="bg-blue-50 p-2 rounded-lg border border-blue-200">
-              <p class="text-[10px] text-blue-700 font-bold uppercase">Monitoring</p>
-              <p id="stat-monitoring" class="text-base font-black text-blue-700">0</p>
-            </div>
-            <div class="bg-purple-50 p-2 rounded-lg border border-purple-200">
-              <p class="text-[10px] text-purple-700 font-bold uppercase">Study</p>
-              <p id="stat-study" class="text-base font-black text-purple-700">0</p>
-            </div>
-            <div class="bg-red-50 p-2 rounded-lg border border-red-200">
-              <p class="text-[10px] text-red-700 font-bold uppercase">NG</p>
-              <p id="stat-ng" class="text-base font-black text-red-700">0</p>
-            </div>
-            <div class="bg-orange-50 p-2 rounded-lg border border-orange-200">
-              <p class="text-[10px] text-orange-700 font-bold uppercase">Pending</p>
-              <p id="stat-pending" class="text-base font-black text-orange-700">0</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Grouped Activity Tables -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">ACTIVITY LIST TABLES</h3>
-
-          <div id="summary-grouped-container" class="space-y-4">
-            <!-- Activity tables injected here -->
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== TAB 3: SETTING ==================== -->
-    <div id="tab-setting-content" class="tab-page hidden space-y-4">
-      
-      <!-- Password Lock Screen -->
-      <div id="setting-auth-card" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 text-center">
-        <div class="w-12 h-12 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
-          <i data-lucide="lock" class="w-6 h-6"></i>
-        </div>
-        <h2 class="text-base font-bold text-slate-800 mb-1">SETTING</h2>
-        <p class="text-xs text-slate-500 mb-4">Enter password to access administrator features</p>
-        
-        <div class="space-y-3 max-w-xs mx-auto">
-          <input 
-            type="password" 
-            id="setting-password-input" 
-            placeholder="Enter Password" 
-            class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-3 text-center text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button 
-            type="button" 
-            onclick="authenticateSetting()" 
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition-colors"
-          >
-            LOGIN
-          </button>
-        </div>
-      </div>
-
-      <!-- Protected Setting Main Content -->
-      <div id="setting-main-content" class="hidden space-y-4">
-        <!-- Google Sheet Access -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-          <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
-            GOOGLE SHEET
-          </h2>
-          <p class="text-xs text-slate-600 mb-3">Direct link to the primary Google Sheet database.</p>
-          <a 
-            href="https://docs.google.com/spreadsheets/d/1F5zMxyOs8SO9HcAtyRAEDmLUOmGMfINFGnTHVIsClps/edit?usp=drivesdk" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition-colors block text-center text-sm"
-          >
-            <i data-lucide="external-link" class="w-4 h-4"></i>
-            <span>OPEN GOOGLE SHEET</span>
-          </a>
-        </div>
-
-        <!-- Filter / Check Report Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-          <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
-            <i data-lucide="search" class="w-4 h-4 text-blue-600"></i>
-            CHECK REPORT
-          </h2>
-
-          <div class="space-y-3 mb-4">
-            <!-- Name Filter -->
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">NAME <span class="text-slate-400">(Optional)</span></label>
-              <input type="text" id="filter-name" placeholder="Filter by Name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <!-- Date Filter -->
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">FROM DATE <span class="text-slate-400">(Opt)</span></label>
-                <input type="date" id="filter-from-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">TO DATE <span class="text-slate-400">(Opt)</span></label>
-                <input type="date" id="filter-to-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500">
-              </div>
-            </div>
-
-            <!-- Area Filter -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">AREA <span class="text-slate-400">(Optional)</span></label>
-              <input type="text" id="filter-area" placeholder="Filter by Area (e.g. MA)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500">
+              <label class="block text-xs font-bold text-slate-600 mb-1">TO DATE <span class="text-red-500">*</span></label>
+              <input type="date" id="summary-to-date" onchange="clearInputError(this)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
           <button 
             type="button" 
-            onclick="checkFilteredReports()" 
+            onclick="generateSummaryReport()" 
             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2 transition-colors"
           >
-            <i data-lucide="filter" class="w-4 h-4"></i>
-            <span>CHECK</span>
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            <span>GENERATE SUMMARY</span>
           </button>
         </div>
 
-        <!-- Filtered Table Results -->
-        <div id="check-results-area" class="hidden space-y-3">
-          <div class="flex items-center justify-between px-1">
-            <span id="records-count-label" class="text-xs font-bold text-slate-700">0 records found</span>
-            <button type="button" onclick="clearFilters()" class="text-xs text-blue-600 font-semibold hover:underline">Reset Filters</button>
-          </div>
+        <!-- Summary Results Section -->
+        <div id="summary-result-area" class="hidden space-y-4">
           
-          <div id="records-list-container" class="space-y-3 overflow-x-auto">
-            <!-- Filtered table inserted here -->
+          <!-- Action Banner with VIEW A4 REPORT Button -->
+          <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div>
+                <p class="text-xs font-bold text-slate-800 uppercase tracking-wide">A4 Official Report</p>
+                <p class="text-[10px] text-slate-500">Formatted printable factory summary</p>
+              </div>
+              <span id="summary-date-range-label" class="text-[11px] text-blue-600 font-semibold"></span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button 
+                type="button" 
+                onclick="openA4ReportModal()" 
+                class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-3 px-2 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors col-span-2"
+              >
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-400"></i>
+                <span>VIEW A4 REPORT</span>
+              </button>
+
+              <button 
+                type="button" 
+                onclick="shareReportText()" 
+                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm transition-colors"
+              >
+                <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                <span>SHARE REPORT</span>
+              </button>
+
+              <button 
+                type="button" 
+                onclick="copySummaryReportText()" 
+                class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs py-2.5 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm transition-colors"
+              >
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>COPY REPORT</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Overview Metrics Grid -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Overall Status Metrics</h3>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-slate-100 p-2 rounded-lg border border-slate-200 col-span-3">
+                <p class="text-[10px] text-slate-500 font-bold uppercase">Total Activities</p>
+                <p id="stat-total" class="text-xl font-black text-slate-800">0</p>
+              </div>
+              <div class="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+                <p class="text-[10px] text-emerald-700 font-bold uppercase">Completed</p>
+                <p id="stat-completed" class="text-base font-black text-emerald-700">0</p>
+              </div>
+              <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200">
+                <p class="text-[10px] text-yellow-700 font-bold uppercase">In Progress</p>
+                <p id="stat-in-progress" class="text-base font-black text-yellow-700">0</p>
+              </div>
+              <div class="bg-blue-50 p-2 rounded-lg border border-blue-200">
+                <p class="text-[10px] text-blue-700 font-bold uppercase">Monitoring</p>
+                <p id="stat-monitoring" class="text-base font-black text-blue-700">0</p>
+              </div>
+              <div class="bg-purple-50 p-2 rounded-lg border border-purple-200">
+                <p class="text-[10px] text-purple-700 font-bold uppercase">Study</p>
+                <p id="stat-study" class="text-base font-black text-purple-700">0</p>
+              </div>
+              <div class="bg-red-50 p-2 rounded-lg border border-red-200">
+                <p class="text-[10px] text-red-700 font-bold uppercase">NG</p>
+                <p id="stat-ng" class="text-base font-black text-red-700">0</p>
+              </div>
+              <div class="bg-orange-50 p-2 rounded-lg border border-orange-200">
+                <p class="text-[10px] text-orange-700 font-bold uppercase">Pending</p>
+                <p id="stat-pending" class="text-base font-black text-orange-700">0</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grouped Activity Tables -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">ACTIVITY LIST TABLES</h3>
+
+            <div id="summary-grouped-container" class="space-y-4">
+              <!-- Activity tables injected here -->
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- ==================== TAB 3: SETTING ==================== -->
+      <div id="tab-setting-content" class="tab-page hidden space-y-4">
+        
+        <!-- Password Lock Screen -->
+        <div id="setting-auth-card" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 text-center">
+          <div class="w-12 h-12 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="lock" class="w-6 h-6"></i>
+          </div>
+          <h2 class="text-base font-bold text-slate-800 mb-1">SETTING</h2>
+          <p class="text-xs text-slate-500 mb-4">Enter password to access administrator features</p>
+          
+          <div class="space-y-3 max-w-xs mx-auto">
+            <input 
+              type="password" 
+              id="setting-password-input" 
+              placeholder="Enter Password" 
+              class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-3 text-center text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button 
+              type="button" 
+              onclick="authenticateSetting()" 
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition-colors"
+            >
+              LOGIN
+            </button>
+          </div>
+        </div>
+
+        <!-- Protected Setting Main Content -->
+        <div id="setting-main-content" class="hidden space-y-4">
+          <!-- Google Sheet Access -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+              GOOGLE SHEET
+            </h2>
+            <p class="text-xs text-slate-600 mb-3">Direct link to the primary Google Sheet database.</p>
+            <a 
+              href="https://docs.google.com/spreadsheets/d/1p9AA-i3wO8Ww754DKcyVMbF1Sd29t4LDv0QiQsEYS8E/edit?usp=drivesdk" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition-colors block text-center text-sm"
+            >
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+              <span>OPEN GOOGLE SHEET</span>
+            </a>
+          </div>
+
+          <!-- Filter / Check Report Section -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i data-lucide="search" class="w-4 h-4 text-blue-600"></i>
+              CHECK REPORT
+            </h2>
+
+            <div class="space-y-3 mb-4">
+              <!-- Name Filter -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">NAME <span class="text-slate-400">(Optional)</span></label>
+                <input type="text" id="filter-name" placeholder="Filter by Name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500">
+              </div>
+
+              <!-- Date Filter -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">FROM DATE <span class="text-slate-400">(Opt)</span></label>
+                  <input type="date" id="filter-from-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">TO DATE <span class="text-slate-400">(Opt)</span></label>
+                  <input type="date" id="filter-to-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500">
+                </div>
+              </div>
+
+              <!-- Area Filter -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">AREA <span class="text-slate-400">(Optional)</span></label>
+                <input type="text" id="filter-area" placeholder="Filter by Area (e.g. MA)" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+
+            <button 
+              type="button" 
+              onclick="checkFilteredReports()" 
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center gap-2 transition-colors"
+            >
+              <i data-lucide="filter" class="w-4 h-4"></i>
+              <span>CHECK</span>
+            </button>
+          </div>
+
+          <!-- Filtered Table Results -->
+          <div id="check-results-area" class="hidden space-y-3">
+            <div class="flex items-center justify-between px-1">
+              <span id="records-count-label" class="text-xs font-bold text-slate-700">0 records found</span>
+              <button type="button" onclick="clearFilters()" class="text-xs text-blue-600 font-semibold hover:underline">Reset Filters</button>
+            </div>
+            
+            <div id="records-list-container" class="space-y-3 overflow-x-auto">
+              <!-- Filtered table inserted here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Sticky Bottom Submit Container (Only visible on Submit Tab) -->
+    <div id="submit-sticky-footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 shadow-lg z-30">
+      <div class="max-w-md mx-auto">
+        <button 
+          type="button" 
+          id="submit-btn" 
+          onclick="submitReport()" 
+          class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-base py-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] tracking-wider"
+        >
+          <i data-lucide="send" class="w-5 h-5"></i>
+          <span>SUBMIT REPORT</span>
+        </button>
+      </div>
     </div>
 
-  </main>
+  </div> <!-- End App Main Wrapper -->
 
   <!-- ==================== A4 REPORT MODAL VIEW ==================== -->
   <div id="a4-report-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex-col overflow-y-auto p-2 sm:p-6">
@@ -531,21 +588,6 @@
     </div>
   </div>
 
-  <!-- Sticky Bottom Submit Container (Only visible on Submit Tab) -->
-  <div id="submit-sticky-footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 shadow-lg z-30">
-    <div class="max-w-md mx-auto">
-      <button 
-        type="button" 
-        id="submit-btn" 
-        onclick="submitReport()" 
-        class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-base py-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] tracking-wider"
-      >
-        <i data-lucide="send" class="w-5 h-5"></i>
-        <span>SUBMIT REPORT</span>
-      </button>
-    </div>
-  </div>
-
   <!-- Loading Modal -->
   <div id="loading-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-center text-white px-4">
     <div class="bg-white text-slate-800 p-6 rounded-2xl shadow-xl flex flex-col items-center max-w-xs w-full text-center">
@@ -585,11 +627,131 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKnWfuP2lfl4IkpBzVg4OTv7TsX1JLR9ET6MefAjPPBRl3vXoM0dYfI58UdZUqA8sG/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1uOvvPp6dmCFTn3XTRDKI1Q4lDe7He8FXlqNO3gAHPC2BkZXVUu5NwKjqw6WEcLbj9A/exec";
     
     let activityCounter = 0;
     let fetchedDatabaseRecords = [];
     let currentReportSummaryData = null; // Structured summary data
+
+    /* ================= LOGIN & AUTHENTICATION ================= */
+
+    function handlePinInput(inputEl) {
+      inputEl.value = inputEl.value.replace(/[^0-9]/g, '');
+      hideLoginError();
+    }
+
+    function togglePinVisibility() {
+      const pinInput = document.getElementById('login-pin');
+      const icon = document.getElementById('pin-eye-icon');
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        pinInput.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    function showLoginError(msg) {
+      const errEl = document.getElementById('login-error-msg');
+      errEl.innerText = msg;
+      errEl.classList.remove('hidden');
+    }
+
+    function hideLoginError() {
+      const errEl = document.getElementById('login-error-msg');
+      errEl.innerText = '';
+      errEl.classList.add('hidden');
+    }
+
+    async function handleLoginSubmit(event) {
+      event.preventDefault();
+      hideLoginError();
+
+      const pinInput = document.getElementById('login-pin');
+      const pin = pinInput.value.trim();
+
+      if (!/^\d{4}$/.test(pin)) {
+        showLoginError('Please enter a valid 4-digit PIN.');
+        pinInput.focus();
+        return;
+      }
+
+      showLoading("Authenticating", "Verifying PIN with server...");
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'login',
+            pin: pin
+          })
+        });
+
+        const result = await response.json();
+        hideLoading();
+
+        if (result && result.success === true) {
+          showMainApp();
+          pinInput.value = '';
+        } else {
+          showLoginError('Invalid PIN.');
+          pinInput.value = '';
+          pinInput.focus();
+        }
+      } catch (error) {
+        hideLoading();
+        console.error("Login connection error:", error);
+        showLoginError('Unable to connect to server. Please try again.');
+        pinInput.value = '';
+        pinInput.focus();
+      }
+    }
+
+    function showMainApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      const mainWrapper = document.getElementById('app-main-wrapper');
+      mainWrapper.classList.remove('hidden');
+      mainWrapper.classList.add('flex');
+      
+      lucide.createIcons();
+      switchTab('submit');
+    }
+
+    function confirmLogout() {
+      document.getElementById('app-menu').classList.add('hidden');
+      if (confirm("Are you sure you want to logout?")) {
+        logoutUser();
+      }
+    }
+
+    function logoutUser() {
+      const mainWrapper = document.getElementById('app-main-wrapper');
+      mainWrapper.classList.add('hidden');
+      mainWrapper.classList.remove('flex');
+
+      const loginScreen = document.getElementById('login-screen');
+      loginScreen.classList.remove('hidden');
+
+      const pinInput = document.getElementById('login-pin');
+      pinInput.value = '';
+      pinInput.type = 'password';
+
+      const icon = document.getElementById('pin-eye-icon');
+      if (icon) {
+        icon.setAttribute('data-lucide', 'eye');
+      }
+
+      hideLoginError();
+      lucide.createIcons();
+      
+      setTimeout(() => {
+        pinInput.focus();
+      }, 100);
+    }
+
+    /* ================= EXISTING APP FUNCTIONS ================= */
 
     function getTodayString() {
       const today = new Date();
@@ -654,8 +816,10 @@
       const btnSetting = document.getElementById('tab-btn-setting');
 
       [btnSubmit, btnView, btnSetting].forEach(btn => {
-        btn.classList.remove('text-blue-400', 'bg-slate-800');
-        btn.classList.add('text-slate-300');
+        if (btn) {
+          btn.classList.remove('text-blue-400', 'bg-slate-800');
+          btn.classList.add('text-slate-300');
+        }
       });
 
       document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
@@ -665,17 +829,17 @@
 
       if (tabName === 'submit') {
         document.getElementById('tab-submit-content').classList.remove('hidden');
-        btnSubmit.classList.add('text-blue-400', 'bg-slate-800');
+        if (btnSubmit) btnSubmit.classList.add('text-blue-400', 'bg-slate-800');
         footer.classList.remove('hidden');
         headerReset.classList.remove('hidden');
       } else if (tabName === 'view') {
         document.getElementById('tab-view-content').classList.remove('hidden');
-        btnView.classList.add('text-blue-400', 'bg-slate-800');
+        if (btnView) btnView.classList.add('text-blue-400', 'bg-slate-800');
         footer.classList.add('hidden');
         headerReset.classList.add('hidden');
       } else if (tabName === 'setting') {
         document.getElementById('tab-setting-content').classList.remove('hidden');
-        btnSetting.classList.add('text-blue-400', 'bg-slate-800');
+        if (btnSetting) btnSetting.classList.add('text-blue-400', 'bg-slate-800');
         footer.classList.add('hidden');
         headerReset.classList.add('hidden');
       }
@@ -914,6 +1078,7 @@
       }
 
       const payload = {
+        action: 'submit',
         name: reporterName,
         activities: activitiesList
       };
@@ -923,7 +1088,6 @@
       try {
         await fetch(SCRIPT_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
@@ -1278,52 +1442,29 @@
       const fileName = `PE_Team_VChip2_Weekly_Report_${fromDisp}_${toDisp}.pdf`;
 
       const element = document.querySelector('.a4-page-sheet');
-      if (!element) {
-        showError("Unable to locate A4 report content.");
-        return;
-      }
 
       showLoading("Generating PDF", "Preparing PDF file for sharing...");
 
       try {
         const opt = {
-          margin: 10,
+          margin: 12,
           filename: fileName,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        let pdfBlob = null;
-        try {
-          // Attempt primary jsPDF object output extraction
-          const pdfObj = await html2pdf().set(opt).from(element).toPdf().get('pdf');
-          if (pdfObj && typeof pdfObj.output === 'function') {
-            pdfBlob = pdfObj.output('blob');
-          }
-        } catch (e1) {
-          console.warn("Primary PDF extraction method failed, fallback to secondary:", e1);
-        }
-
-        // Secondary fallback output method
-        if (!pdfBlob) {
-          pdfBlob = await html2pdf().set(opt).from(element).output('blob').catch(() => null);
-        }
+        const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
 
         hideLoading();
 
-        if (!pdfBlob || !(pdfBlob instanceof Blob)) {
-          showError("Direct PDF sharing is not supported on this device. Please use PRINT / SAVE PDF first, then share the saved PDF.");
-          return;
-        }
+        const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
-        const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-
-        // Check native Web Share API with file sharing support
         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
           await navigator.share({
             files: [pdfFile],
-            title: "PE TEAM VCHIP 2 WEEKLY SUMMARY REPORT"
+            title: 'PE Team VChip 2 Weekly Report',
+            text: `PE Team VChip 2 Weekly Report (${formatDateDisplay(currentReportSummaryData.fromDate)} - ${formatDateDisplay(currentReportSummaryData.toDate)})`
           });
         } else {
           showError("Direct PDF sharing is not supported on this device. Please use PRINT / SAVE PDF first, then share the saved PDF.");
@@ -1331,10 +1472,6 @@
       } catch (err) {
         hideLoading();
         console.error("PDF generation or sharing error:", err);
-        if (err && (err.name === 'AbortError' || err.message === 'Share canceled' || String(err).includes('cancel'))) {
-          // User closed native share sheet without picking an app
-          return;
-        }
         showError("Direct PDF sharing is not supported on this device. Please use PRINT / SAVE PDF first, then share the saved PDF.");
       }
     }
@@ -1514,6 +1651,12 @@
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       addActivityCard();
+
+      // Focus PIN input on load
+      const pinInput = document.getElementById('login-pin');
+      if (pinInput) {
+        pinInput.focus();
+      }
     });
   </script>
 </body>
